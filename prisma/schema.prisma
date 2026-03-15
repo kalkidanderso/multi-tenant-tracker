@@ -1,0 +1,168 @@
+// This is the Prisma schema for the Multi-Tenant Issue Tracker.
+// Each tenant (Organization) has isolated data enforced via organizationId FK
+// on every table. The JWT contains the organizationId claim, which is
+// validated server-side on every API request.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Tenant ─────────────────────────────────────────────────────────────────
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  slug      String   @unique // URL-safe identifier; also used as tenant key
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users    User[]
+  projects Project[]
+  issues   Issue[]
+  tags     Tag[]
+
+  @@map("organizations")
+}
+
+// ─── Users ───────────────────────────────────────────────────────────────────
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model User {
+  id             String   @id @default(uuid())
+  email          String
+  name           String
+  passwordHash   String
+  role           Role     @default(MEMBER)
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  assignedIssues Issue[]    @relation("AssignedTo")
+  createdIssues  Issue[]    @relation("CreatedBy")
+  comments       Comment[]
+
+  // email must be unique within a tenant, not globally
+  @@unique([email, organizationId])
+  @@index([organizationId])
+  @@map("users")
+}
+
+// ─── Projects ────────────────────────────────────────────────────────────────
+
+model Project {
+  id             String   @id @default(uuid())
+  name           String
+  description    String?
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  issues       Issue[]
+
+  @@unique([name, organizationId])
+  @@index([organizationId])
+  @@map("projects")
+}
+
+// ─── Issues ──────────────────────────────────────────────────────────────────
+
+enum IssueStatus {
+  OPEN
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+  CLOSED
+}
+
+enum IssuePriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model Issue {
+  id             String        @id @default(uuid())
+  title          String
+  description    String?
+  status         IssueStatus   @default(OPEN)
+  priority       IssuePriority @default(MEDIUM)
+  organizationId String
+  projectId      String
+  createdById    String
+  assignedToId   String?
+  dueDate        DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy    User         @relation("CreatedBy", fields: [createdById], references: [id])
+  assignedTo   User?        @relation("AssignedTo", fields: [assignedToId], references: [id])
+  comments     Comment[]
+  tags         IssueTag[]
+
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([status])
+  @@index([priority])
+  @@map("issues")
+}
+
+// ─── Comments ────────────────────────────────────────────────────────────────
+
+model Comment {
+  id             String   @id @default(uuid())
+  body           String
+  issueId        String
+  authorId       String
+  organizationId String   // denormalized for RLS enforcement
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  issue  Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  author User  @relation(fields: [authorId], references: [id])
+
+  @@index([issueId])
+  @@index([organizationId])
+  @@map("comments")
+}
+
+// ─── Tags ────────────────────────────────────────────────────────────────────
+
+model Tag {
+  id             String @id @default(uuid())
+  name           String
+  color          String @default("#6366f1")
+  organizationId String
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  issues       IssueTag[]
+
+  @@unique([name, organizationId])
+  @@index([organizationId])
+  @@map("tags")
+}
+
+model IssueTag {
+  issueId String
+  tagId   String
+
+  issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  tag   Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([issueId, tagId])
+  @@map("issue_tags")
+}
