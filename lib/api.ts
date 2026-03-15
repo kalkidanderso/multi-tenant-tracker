@@ -43,10 +43,7 @@ export function withErrorHandler(handler: RouteHandler): RouteHandler {
       }
 
       console.error("[API Error]", err);
-      const message =
-        process.env.NODE_ENV === "development" && err instanceof Error
-          ? err.message
-          : "Internal server error";
+      const message = err instanceof Error ? err.message : "Internal server error";
       return errorResponse(message, 500);
     }
   };
