@@ -2,7 +2,7 @@
 
 A robust, production-ready multi-tenant issue tracking application built with Next.js 16, Prisma, PostgreSQL, and custom JWT authentication.
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 The system follows a strict, layered monolithic architecture leveraging the Next.js App Router for both backend API routes and frontend React nodes. 
 
@@ -21,7 +21,7 @@ Rather than relying on subdomains initially, tenancy is scoped by the **Active J
 4. **Validation Bounds**: All API inputs run through explicit JSON constraints using `Zod` (e.g. `CreateIssueSchema`), terminating bad requests early before they can pollute the database drivers.
 5. **Exception Handling**: A wrapper function (`withErrorHandler`) swallows stack traces, maps Prisma Constraint errors to standard HTTP status codes (400, 403, 404, 409), and logs the internal traces privately.
 
-## 🚀 Getting Started
+## Getting Started
 
 Ensure you have a PostgreSQL database available.
 
