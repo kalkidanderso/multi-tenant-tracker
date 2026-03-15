@@ -49,13 +49,31 @@ export default function LoginPage() {
         </div>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/50 text-red-400 text-sm p-3 rounded-lg mb-6 flex items-center gap-2">
+          <div className="bg-red-500/10 border border-red-500/50 text-red-400 text-sm p-3 rounded-lg flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Demo Credentials Helper for Assignment Review */}
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 flex flex-col items-center gap-3">
+          <p className="text-xs text-blue-300 font-mono tracking-widest text-center uppercase">Assignment Reviewer Access</p>
+          <button 
+            type="button"
+            className="w-full text-xs bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 py-2 rounded transition-colors border border-blue-500/30"
+            onClick={() => {
+              setFormData({
+                orgSlug: "rudratek-hq",
+                email: "admin@rudratek.co.in",
+                password: "root"
+              });
+            }}
+          >
+            Auto-Fill Admin Credentials
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
               Tenant Slug
