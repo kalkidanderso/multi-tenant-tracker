@@ -26,7 +26,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   const passwordHash = await bcrypt.hash(body.password, 12);
 
   // Atomic: org + owner user created together
-  const { org, user } = await prisma.$transaction(async (tx) => {
+  const { org, user } = await prisma.$transaction(async (tx: any) => {
     const org = await tx.organization.create({
       data: { name: body.orgName, slug: body.orgSlug },
     });
